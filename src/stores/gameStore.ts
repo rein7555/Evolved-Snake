@@ -13,7 +13,7 @@ interface Food {
 }
 
 const GRID_SIZE = 10
-const INITIAL_SNAKE_LENGTH = 3
+const _INITIAL_SNAKE_LENGTH = 3
 
 export interface Highscore {
   score: number
@@ -144,7 +144,10 @@ export const useGameStore = defineStore('game', () => {
 
   // 移動蛇
   function moveSnake() {
-    const head = [...snake.value[0]] as SnakePosition
+    const snakeHead = snake.value[0]
+    if (!snakeHead) return false
+
+    const head = [...snakeHead] as SnakePosition
 
     // 根據方向移動頭
     switch (direction.value) {
@@ -170,8 +173,10 @@ export const useGameStore = defineStore('game', () => {
       if (food.value.type === 'diamond') {
         score.value += 30 * currentScoreMultiplier.value
         const lastPos = snake.value[snake.value.length - 1]
-        snake.value.push([...lastPos] as SnakePosition)
-        snake.value.push([...lastPos] as SnakePosition)
+        if (lastPos) {
+          snake.value.push([...lastPos] as SnakePosition)
+          snake.value.push([...lastPos] as SnakePosition)
+        }
       } else {
         score.value += 10 * currentScoreMultiplier.value
       }
@@ -199,7 +204,8 @@ export const useGameStore = defineStore('game', () => {
 
     // 檢測自身碰撞（不包括頭自己）
     for (let i = 1; i < snake.value.length; i++) {
-      if (head[0] === snake.value[i][0] && head[1] === snake.value[i][1]) {
+      const segment = snake.value[i]
+      if (segment && head[0] === segment[0] && head[1] === segment[1]) {
         return true
       }
     }
@@ -212,7 +218,8 @@ export const useGameStore = defineStore('game', () => {
     if (!bomb.value) return false
     const head = snake.value[0]
     if (!head) return false
-    return head[0] === bomb.value[0] && head[1] === bomb.value[1]
+    const bombPos = bomb.value
+    return head[0] === bombPos[0] && head[1] === bombPos[1]
   }
 
   // 暫停/繼續
