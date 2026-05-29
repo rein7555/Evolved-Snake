@@ -65,11 +65,20 @@ const difficultyLabel: Record<string, string> = {
 
 const audioContext = ref<AudioContext | null>(null)
 
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext
+  }
+}
+
 const getAudioContext = () => {
   if (!audioContext.value) {
-    audioContext.value = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const AudioContextConstructor = window.AudioContext || window.webkitAudioContext
+    if (AudioContextConstructor) {
+      audioContext.value = new AudioContextConstructor()
+    }
   }
-  if (audioContext.value.state === 'suspended') {
+  if (audioContext.value && audioContext.value.state === 'suspended') {
     audioContext.value.resume()
   }
   return audioContext.value
@@ -77,6 +86,8 @@ const getAudioContext = () => {
 
 const playTone = (frequency: number, duration = 0.08, type: OscillatorType = 'sine') => {
   const ctx = getAudioContext()
+  if (!ctx) return
+
   const oscillator = ctx.createOscillator()
   const gain = ctx.createGain()
 
@@ -91,10 +102,6 @@ const playTone = (frequency: number, duration = 0.08, type: OscillatorType = 'si
 
   oscillator.start(ctx.currentTime)
   oscillator.stop(ctx.currentTime + duration)
-}
-
-const playMoveSound = () => {
-  playTone(440, 0.05, 'triangle')
 }
 
 const playAppleSound = () => {
@@ -112,7 +119,10 @@ const gridCells = computed(() => {
       // 檢查是否是蛇
       const isSnake = gameStore.snake.some((pos) => pos[0] === x && pos[1] === y)
       if (isSnake) {
-        type = gameStore.snake[0][0] === x && gameStore.snake[0][1] === y ? 'head' : 'body'
+        const head = gameStore.snake[0]
+        if (head) {
+          type = head[0] === x && head[1] === y ? 'head' : 'body'
+        }
       }
 
       // 檢查是否是食物

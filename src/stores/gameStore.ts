@@ -15,7 +15,7 @@ interface Food {
 const GRID_SIZE = 10
 const INITIAL_SNAKE_LENGTH = 3
 
-interface Highscore {
+export interface Highscore {
   score: number
   difficulty: GameDifficulty
   timestamp: number
@@ -82,7 +82,7 @@ export const useGameStore = defineStore('game', () => {
 
   // 生成食物
   function generateFood(): Food {
-    let newPosition: SnakePosition
+    let newPosition: SnakePosition = [0, 0]
     let isValid = false
 
     while (!isValid) {
@@ -107,7 +107,7 @@ export const useGameStore = defineStore('game', () => {
 
   // 生成炸彈
   function generateBomb(foodPosition: SnakePosition): SnakePosition {
-    let newPosition: SnakePosition
+    let newPosition: SnakePosition = [0, 0]
     let isValid = false
 
     while (!isValid) {
@@ -169,8 +169,9 @@ export const useGameStore = defineStore('game', () => {
       // 根據食物類型決定獎勵
       if (food.value.type === 'diamond') {
         score.value += 30 * currentScoreMultiplier.value
-        snake.value.push([...snake.value[snake.value.length - 1]])
-        snake.value.push([...snake.value[snake.value.length - 1]])
+        const lastPos = snake.value[snake.value.length - 1]
+        snake.value.push([...lastPos] as SnakePosition)
+        snake.value.push([...lastPos] as SnakePosition)
       } else {
         score.value += 10 * currentScoreMultiplier.value
       }
@@ -189,6 +190,7 @@ export const useGameStore = defineStore('game', () => {
   // 檢測碰撞
   function checkCollision(): boolean {
     const head = snake.value[0]
+    if (!head) return false
 
     // 檢測牆碰撞
     if (head[0] < 0 || head[0] >= GRID_SIZE || head[1] < 0 || head[1] >= GRID_SIZE) {
@@ -209,6 +211,7 @@ export const useGameStore = defineStore('game', () => {
   function checkBombCollision(): boolean {
     if (!bomb.value) return false
     const head = snake.value[0]
+    if (!head) return false
     return head[0] === bomb.value[0] && head[1] === bomb.value[1]
   }
 
